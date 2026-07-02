@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Lead {
+  id                    String   @id @default(cuid())
+  fullName              String
+  phone                 String
+  email                 String?
+  currentRole           String
+  currentEducationLevel String
+  academicLevel         String
+  currentMajor          String?
+  graduationPlan        String?
+  targetCountry         String
+  targetMajor           String
+  studyType             String
+  departureTime         String
+  budget                String
+  language              String
+  certificate           String
+  certificateScore      String?
+  languageLevel         String
+  weakSkill             String
+  languageGroup         Int
+  profileGroup          String   // A / B / C / D
+  resultTitle           String
+  resultNote            String
+  aiEvaluation          String?  // Gemini AI personalized evaluation (nullable for fallback)
+  consentAccepted       Boolean
+  status                String   @default("new") // new / contacted / consulted / closed
+  sourcePage            String?
+  utmSource             String?
+  utmMedium             String?
+  utmCampaign           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([phone])
+  @@index([profileGroup])
+  @@index([status])
+}
+
+model WebhookLog {
+  id        String   @id @default(cuid())
+  leadId    String
+  target    String   // "google_sheet" | "zalo" | "email"
+  status    String   // pending / sent / failed / dead
+  attempts  Int      @default(0)
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RateLimit {
+  id        String   @id @default(cuid())
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+}
