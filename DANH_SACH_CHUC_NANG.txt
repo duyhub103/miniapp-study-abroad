@@ -1,0 +1,65 @@
+# DANH SÁCH CHỨC NĂNG DỰ ÁN: ĐÁNH GIÁ ĐẦU VÀO DU HỌC (STUDY ABROAD EVALUATION PLATFORM)
+
+Dự án là một hệ thống toàn diện hỗ trợ thu thập thông tin khách hàng tiềm năng (leads), tự động đánh giá hồ sơ bằng trí tuệ nhân tạo (Gemini AI) kết hợp với các quy tắc nghiệp vụ (Rule-based), cung cấp báo cáo lộ trình cá nhân hóa cho học viên, và cung cấp một Dashboard quản trị CRM chuyên nghiệp cho các tư vấn viên.
+
+Dưới đây là danh sách chi tiết các chức năng đã được xây dựng trong dự án:
+
+## I. GIAO DIỆN KHẢO SÁT & ĐÁNH GIÁ DÀNH CHO HỌC VIÊN (CLIENT-SIDE)
+1. **Form Khảo sát 5 Bước tối ưu trải nghiệm (Multi-step Form)**:
+   - **Bước 1 (Thông tin cá nhân)**: Thu thập Họ tên, Số điện thoại, Email, Vai trò hiện tại (Học sinh, Sinh viên, Phụ huynh, v.v.).
+   - **Bước 2 (Học tập)**: Thu thập Trình độ học vấn, Học lực (Giỏi, Khá, Trung bình, Yếu), Ngành học hiện tại và Kế hoạch tốt nghiệp.
+   - **Bước 3 (Định hướng du học)**: Chọn Quốc gia mong muốn (Nhật, Hàn, Đức, Úc, Mỹ, v.v.), Bậc học mong muốn (Du học nghề, Đại học, Cao đẳng, v.v.), Ngành học mục tiêu, Thời gian dự kiến bay và Ngân sách hàng năm.
+   - **Bước 4 (Ngoại ngữ)**: Chọn ngoại ngữ chính, chứng chỉ hiện có (IELTS, TOPIK, JLPT, v.v.), điểm số chi tiết, tự đánh giá trình độ và kỹ năng ngoại ngữ yếu nhất.
+   - **Bước 5 (Xác nhận & Gửi)**: Tóm tắt lại toàn bộ thông tin đã nhập để người dùng xác nhận trước khi gửi.
+2. **Lưu bản nháp tự động (Auto-save Draft)**:
+   - Tự động lưu trữ thông tin đang điền vào `localStorage`. Nếu học viên tải lại trang hoặc vô tình thoát ra, thông tin sẽ được khôi phục nguyên vẹn.
+3. **Phân tích và Đánh giá hồ sơ tức thì (Dual-Engine Evaluation)**:
+   - **Động cơ Quy tắc (Rule-based)**: Tự động phân loại hồ sơ học thuật vào các nhóm từ A đến D (A: Rất tốt, B: Tốt, C: Trung bình, D: Cần cải thiện) và nhóm ngoại ngữ từ 1 đến 4 dựa trên bộ quy tắc cứng.
+   - **Động cơ Trí tuệ nhân tạo (Gemini AI)**: Tự động phân tích các yếu tố đầu vào để sinh bài viết nhận xét cá nhân hóa gồm 3 đoạn rõ ràng (Điểm mạnh, Điểm hạn chế, Lộ trình đề xuất).
+   - **Cơ chế Dự phòng (Fallback)**: Nếu kết nối Gemini AI bị lỗi hoặc hết lượt dùng, hệ thống tự động hiển thị nhận xét mặc định tương ứng với nhóm phân loại để tránh làm gián đoạn trải nghiệm người dùng.
+4. **Trang hiển thị Kết quả & Xuất báo cáo**:
+   - **Biểu đồ mạng nhện (Radar Chart)**: Trực quan hóa các chỉ số năng lực của học viên (Học thuật, Tài chính, Ngoại ngữ, Định hướng, Độ sẵn sàng).
+   - **Xuất PDF báo cáo chuyên nghiệp**: Tích hợp tính năng in/lưu file PDF kết quả tối ưu hiển thị khổ giấy A4, tự động ẩn các thanh công cụ, sidebar và nút hành động không liên quan.
+   - **Chia sẻ mạng xã hội (Zalo, Facebook)** và **Sao chép liên kết**: Cho phép học viên chia sẻ nhanh báo cáo kết quả của mình cho bạn bè hoặc người thân.
+   - **Làm lại bài đánh giá (Retake)**: Xóa bản nháp cũ để người dùng có thể thực hiện lại từ đầu.
+
+## II. HỆ THỐNG PHÒNG CHỐNG SPAM & BẢO MẬT (SECURITY & ANTI-SPAM)
+1. **Bẫy Spam Bot (Honeypot)**:
+   - Thiết lập các trường ẩn (hidden fields) trong form mà người dùng thường không thấy nhưng bot tự động điền sẽ bị hệ thống từ chối và chặn gửi form.
+2. **Giới hạn lượt gửi (Rate Limiting)**:
+   - Giới hạn tối đa 3 lần gửi form trong vòng 1 giờ đối với mỗi địa chỉ IP để tránh các cuộc tấn công spam API. Tự động tắt tính năng này khi đang phát triển dưới môi trường local (chạy dev).
+3. **Lọc dữ liệu đầu vào (Input Sanitization)**:
+   - Tự động phát hiện và loại bỏ các ký tự độc hại, các thẻ HTML lạ để chống tấn công XSS (Cross-Site Scripting).
+
+## III. TRANG QUẢN TRỊ VIÊN CRM & DASHBOARD CHĂM SÓC KHÁCH HÀNG (`/admin`)
+1. **Bảo mật và Xác thực (Authentication)**:
+   - Đăng nhập bảo mật sử dụng JWT (JSON Web Token) lưu trữ trong Cookies, hỗ trợ tự động hết hạn và đăng xuất an toàn.
+2. **Bảng thống kê hiệu suất (Stats Dashboard)**:
+   - **Tổng quan số liệu**: Hiển thị tổng số lead đăng ký và tỷ lệ phần trăm lead đã liên hệ.
+   - **Tiến trình trạng thái**: Biểu đồ hiển thị số lượng lead theo từng trạng thái xử lý dữ liệu.
+   - **Phân chia công việc theo tư vấn viên**: Theo dõi số lượng lead được phân bổ tự động cho từng chuyên viên (Trần Hoàng Duy - Tuyến Úc/Mỹ/Canada, Trần Tấn Phúc - Tuyến Châu Á, Phạm Đăng Hoàng Hiếu - Tuyến Châu Âu & Khác).
+3. **Quản lý danh sách Lead nâng cao (Leads Manager)**:
+   - Phân trang dữ liệu (Pagination) hỗ trợ quản lý lượng thông tin lớn.
+   - Bộ lọc đa năng: Lọc nhanh theo Nhóm hồ sơ (A/B/C/D) và Trạng thái xử lý (Mới nhận, Đã liên hệ, Đang tư vấn, Đã chốt).
+4. **Phân tích biểu đồ & Báo cáo nâng cao**:
+   - **Biểu đồ Cột dọc**: Thống kê tỉ lệ các quốc gia được học viên quan tâm nhiều nhất, tích hợp tooltip hiển thị số liệu chi tiết.
+   - **Biểu đồ Tròn (Donut Chart)**: Thống kê tỉ lệ phân bổ các nhóm hồ sơ học lực (A/B/C/D).
+5. **Trình phân loại mức độ tiềm năng (Potential Classifier)**:
+   - Tự động chấm điểm độ tiềm năng (0 - 100) dựa trên trọng số của các yếu tố: Nhóm hồ sơ, độ sẵn sàng ngoại ngữ, tài chính, thời gian dự kiến bay, tính rõ ràng trong định hướng và thông tin liên lạc.
+   - Phân loại lead thành 3 mức độ: **Rất tiềm năng (Hot)**, **Tiềm năng (Warm)**, và **Cần chăm sóc (Cold)** đi kèm các hành động tư vấn đề xuất tương ứng cho sales.
+   - **Tương tác Đóng/Mở trực quan**: Cho phép người quản trị bấm trực tiếp vào từng ô phân loại (Hot, Warm, Cold) để mở rộng hoặc thu gọn danh sách lead chi tiết thuộc nhóm đó ở phía dưới.
+6. **Chi tiết Lead & CRM Follow-up**:
+   - Xem toàn bộ 24 trường thông tin chi tiết của cuộc khảo sát.
+   - Theo dõi nguồn gốc đăng ký thông qua UTM Tracking (Source, Medium, Campaign).
+   - Cập nhật trạng thái xử lý trực quan bằng các nút chuyển trạng thái đã việt hóa.
+   - **Tạo và chỉnh sửa lộ trình tùy chỉnh (Roadmap Tool)**:
+     - Cho phép tư vấn viên kích hoạt AI tự động viết lộ trình học tập/du học chi tiết dựa trên hồ sơ học viên.
+     - Trình soạn thảo văn bản trực tiếp để chỉnh sửa nội dung lộ trình.
+     - Hỗ trợ lưu lịch sử và tự động gửi email lộ trình bản đẹp cho học viên qua hệ thống mail server (SMTP).
+   - Xem nhật ký hoạt động đồng bộ Webhook để kiểm tra lịch sử gửi dữ liệu sang các nền tảng thứ ba.
+
+## IV. HỆ THỐNG ĐỒNG BỘ WEBHOOKS & AUTOMATION (ASYNCHRONOUS WEBHOOKS)
+1. **Đồng bộ tự động bất đồng bộ**:
+   - Sau khi học viên gửi form, hệ thống xử lý bất đồng bộ (background jobs) để gửi dữ liệu lead đến các webhook đích (Google Sheets, Zalo Notification, Hubspot CRM, Salesforce, v.v.) mà không làm tăng thời gian chờ của học viên.
+2. **Cơ chế tự động gửi lại khi lỗi (Webhook Retry - Cron Job)**:
+   - Cung cấp API endpoint `/api/cron/retry-webhooks` để hệ thống tự động quét và gửi lại các webhook bị thất bại tối đa 5 lần (với độ trễ tăng dần), hạn chế tối đa việc thất thoát dữ liệu khách hàng.
