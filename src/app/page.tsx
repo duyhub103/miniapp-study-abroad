@@ -32,8 +32,8 @@ export default function HomePage() {
   return (
     <main className="flex-1">
       {/* Hero / 2-column layout */}
-      <div className="min-h-screen flex flex-col lg:flex-row">
-        {/* Left column: Benefits (Sidebar) */}
+      <div className="min-h-screen flex flex-col lg:flex-row-reverse">
+        {/* Right column: Benefits (Sidebar) */}
         <div
           className={`transition-all duration-300 ease-in-out bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800 text-white relative overflow-hidden no-print flex flex-col justify-start lg:sticky lg:top-0 lg:h-screen z-20 ${
             isCollapsed
