@@ -118,6 +118,13 @@ export const LEAD_STATUSES = [
   "closed",
 ] as const;
 
+export const STATUS_LABELS: Record<typeof LEAD_STATUSES[number], string> = {
+  new: "Mới nhận",
+  contacted: "Đã liên hệ",
+  consulted: "Đang tư vấn",
+  closed: "Đã chốt",
+};
+
 export const PROFILE_GROUPS = ["A", "B", "C", "D"] as const;
 
 // Step labels for the progress bar
@@ -128,3 +135,36 @@ export const FORM_STEPS = [
   "Ngoại ngữ",
   "Xác nhận & Gửi",
 ] as const;
+
+// ============================================================
+// Additional option arrays for enhanced UX
+// ============================================================
+
+export const CURRENT_MAJORS = [
+  "Quản trị kinh doanh",
+  "Kế toán – Tài chính",
+  "Công nghệ thông tin",
+  "Kỹ thuật điện – Điện tử",
+  "Cơ khí – Chế tạo",
+  "Xây dựng – Kiến trúc",
+  "Ngôn ngữ Anh",
+  "Ngôn ngữ Nhật",
+  "Ngôn ngữ Hàn",
+  "Ngôn ngữ Trung",
+  "Y tế – Điều dưỡng",
+  "Du lịch – Nhà hàng khách sạn",
+  "Nông nghiệp",
+  "Luật",
+  "Sư phạm",
+  "Khác",
+] as const;
+
+export const CERTIFICATE_SCORES: Record<string, readonly string[]> = {
+  "IELTS": ["3.0", "3.5", "4.0", "4.5", "5.0", "5.5", "6.0", "6.5", "7.0", "7.5", "8.0", "8.5", "9.0"],
+  "TOEIC": ["10–250", "255–400", "405–600", "605–780", "785–900", "905–990"],
+  "TOEFL": ["Dưới 42", "42–71", "72–94", "95–113", "114–120"],
+  "JLPT": ["N5", "N4", "N3", "N2", "N1"],
+  "TOPIK": ["TOPIK I (Level 1)", "TOPIK I (Level 2)", "TOPIK II (Level 3)", "TOPIK II (Level 4)", "TOPIK II (Level 5)", "TOPIK II (Level 6)"],
+  "Goethe": ["A1", "A2", "B1", "B2", "C1", "C2"],
+  "TestDaF": ["TDN 3", "TDN 4", "TDN 5"],
+};

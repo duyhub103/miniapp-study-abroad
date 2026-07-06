@@ -21,6 +21,13 @@ interface ResultData {
   suggestion: string;
   languageAssessment: string;
   aiEvaluation?: string | null;
+  radarScores?: {
+    academics: number;
+    language: number;
+    finance: number;
+    timeline: number;
+    direction: number;
+  };
   ctaPrimary: { label: string; href: string };
   ctaSecondary: { label: string; href: string };
 }
@@ -33,6 +40,7 @@ export default function EvaluationForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [result, setResult] = useState<ResultData | null>(null);
+  const [emailStatus, setEmailStatus] = useState<string | null>(null);
 
   // Load draft from localStorage on mount
   useEffect(() => {
@@ -153,6 +161,7 @@ export default function EvaluationForm() {
 
       // Success!
       setResult(json.result);
+      setEmailStatus(json.emailStatus || null);
       localStorage.removeItem(STORAGE_KEY);
     } catch {
       setSubmitError("Không thể kết nối máy chủ. Vui lòng thử lại.");
@@ -167,13 +176,14 @@ export default function EvaluationForm() {
     setErrors({});
     setResult(null);
     setSubmitError(null);
+    setEmailStatus(null);
     localStorage.removeItem(STORAGE_KEY);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Show result if submitted
   if (result) {
-    return <ResultDisplay result={result} onReset={handleReset} />;
+    return <ResultDisplay result={result} emailStatus={emailStatus} onReset={handleReset} />;
   }
 
   const isLastStep = step === FORM_STEPS.length - 1;

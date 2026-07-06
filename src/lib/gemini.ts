@@ -27,14 +27,15 @@ interface ProfileData {
 }
 
 function buildPrompt(data: ProfileData): string {
-  return `Bạn là một chuyên gia tư vấn du học tận tâm của trung tâm "Du Học Bình Dương". Hãy viết một bài đánh giá cá nhân hóa chi tiết, ngắn gọn khoảng 150-250 từ dựa trên hồ sơ của học viên dưới đây.
+  return `Bạn là một chuyên gia tư vấn du học tận tâm của trung tâm "Du Học Bình Dương". Hãy viết một bài đánh giá cá nhân hóa chi tiết dựa trên hồ sơ của học viên dưới đây.
 
 Yêu cầu về văn phong & định dạng:
-1. Viết bằng tiếng Việt, giọng điệu chuyên nghiệp, khuyến khích, xưng "chúng tôi" hoặc "Du Học Bình Dương" và gọi học viên là "bạn".
-2. Bố cục gồm đúng 3 đoạn văn ngắn (ngăn cách nhau bởi một dòng trống):
+1. Viết bằng tiếng Việt, giọng điệu chuyên nghiệp, nhiệt huyết, truyền cảm hứng, xưng "chúng tôi" hoặc "Du Học Bình Dương" và gọi học viên là "bạn".
+2. Bố cục gồm đúng 4 đoạn văn ngắn (ngăn cách nhau bởi một dòng trống):
    - Đoạn 1: Đánh giá tổng quan về học lực và định hướng ngành học ở nước mục tiêu.
    - Đoạn 2: Đánh giá chi tiết về trình độ ngoại ngữ hiện tại, phân tích kỹ năng còn yếu và gợi ý giải pháp cải thiện.
    - Đoạn 3: Đưa ra lời khuyên cụ thể về lộ trình chuẩn bị hồ sơ và kế hoạch tài chính phù hợp với mốc thời gian dự kiến.
+   - Đoạn 4: Viết một đoạn văn ngắn đầy sức thuyết phục và truyền cảm hứng để thôi thúc học viên chủ động liên hệ ngay với Du Học Bình Dương nhằm nhận bản lộ trình chi tiết hoàn toàn miễn phí, cũng như bắt đầu hoàn tất thủ tục đăng ký du học sớm để giữ các suất học bổng tốt nhất và kịp thời cho kỳ nhập học mong muốn.
 3. KHÔNG sử dụng các định dạng markdown như dấu hoa thị (*), ký hiệu danh sách, tiêu đề (h1, h2, h3) hay chữ in đậm. Hãy viết văn bản thuần túy (plain text) một cách tự nhiên.
 
 DƯỚI ĐÂY LÀ THÔNG TIN HỒ SƠ HỌC VIÊN:
@@ -79,7 +80,7 @@ export async function generateAIEvaluation(
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       generationConfig: {
-        maxOutputTokens: 800, // Tăng giới hạn token để tránh bị cắt lời giữa chừng
+        maxOutputTokens: 2048, // Cần đủ lớn vì gemini-2.5-flash dùng token cho cả thinking + output
         temperature: 0.7,
       },
     });

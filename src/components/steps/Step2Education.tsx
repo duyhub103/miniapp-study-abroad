@@ -1,7 +1,7 @@
 "use client";
 
-import { TextField, SelectField, ChipGroup } from "@/components/FormField";
-import { EDUCATION_LEVELS, ACADEMIC_LEVELS } from "@/lib/enums";
+import { SelectField, ChipGroup, ComboField, MonthPickerField } from "@/components/FormField";
+import { EDUCATION_LEVELS, ACADEMIC_LEVELS, CURRENT_MAJORS } from "@/lib/enums";
 
 interface StepProps {
   data: Record<string, string>;
@@ -37,22 +37,24 @@ export default function Step2Education({ data, errors, onChange }: StepProps) {
         options={ACADEMIC_LEVELS}
       />
 
-      <TextField
+      <ComboField
         id="currentMajor"
         label="Ngành học hiện tại (nếu có)"
         value={data.currentMajor || ""}
         onChange={(v) => onChange("currentMajor", v)}
         error={errors.currentMajor}
-        placeholder="VD: Quản trị kinh doanh"
+        options={CURRENT_MAJORS}
+        placeholder="-- Chọn ngành --"
+        customLabel="✏️ Nhập ngành khác..."
       />
 
-      <TextField
+      <MonthPickerField
         id="graduationPlan"
         label="Dự kiến tốt nghiệp (nếu có)"
         value={data.graduationPlan || ""}
         onChange={(v) => onChange("graduationPlan", v)}
         error={errors.graduationPlan}
-        placeholder="VD: 6/2026"
+        placeholder="Chọn tháng/năm dự kiến"
       />
     </div>
   );

@@ -1,6 +1,6 @@
 import { prisma } from "./prisma";
 
-type WebhookTarget = "google_sheet" | "zalo" | "email";
+type WebhookTarget = "google_sheet" | "zalo" | "email" | "hubspot" | "salesforce";
 
 interface LeadData {
   id: string;
@@ -9,6 +9,7 @@ interface LeadData {
   email?: string | null;
   profileGroup: string;
   resultTitle: string;
+  assignedTo?: string | null;
   [key: string]: unknown;
 }
 
@@ -32,14 +33,68 @@ async function sendEmail(lead: LeadData): Promise<void> {
   console.log(`[Webhook] Would send email to ${email} about lead ${lead.id} (${lead.fullName})`);
 }
 
+async function sendToHubSpot(lead: LeadData): Promise<void> {
+  const apiKey = process.env.HUBSPOT_API_KEY;
+  if (!apiKey) {
+    console.log(`[Webhook] HUBSPOT_API_KEY not configured. Simulating HubSpot CRM sync for lead: ${lead.fullName}`);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return;
+  }
+  const res = await fetch("https://api.hubapi.com/crm/v3/objects/contacts", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      properties: {
+        firstname: lead.fullName.split(" ").slice(1).join(" ") || lead.fullName,
+        lastname: lead.fullName.split(" ")[0] || "",
+        phone: lead.phone,
+        email: lead.email || "",
+        hs_lead_status: "NEW",
+        assigned_to: lead.assignedTo || "",
+      }
+    })
+  });
+  if (!res.ok) throw new Error(`HubSpot CRM sync failed: ${res.status}`);
+}
+
+async function sendToSalesforce(lead: LeadData): Promise<void> {
+  const token = process.env.SALESFORCE_TOKEN;
+  if (!token) {
+    console.log(`[Webhook] SALESFORCE_TOKEN not configured. Simulating Salesforce CRM sync for lead: ${lead.fullName}`);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    return;
+  }
+  const res = await fetch("https://your-instance.my.salesforce.com/services/data/v52.0/sobjects/Lead", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      LastName: lead.fullName,
+      Company: "Du Học Bình Dương",
+      Phone: lead.phone,
+      Email: lead.email || "",
+      Status: "Open - Not Contacted",
+      Owner: lead.assignedTo || "",
+    })
+  });
+  if (!res.ok) throw new Error(`Salesforce CRM sync failed: ${res.status}`);
+}
+
 const SENDERS: Record<WebhookTarget, (lead: LeadData) => Promise<void>> = {
   google_sheet: sendToGoogleSheet,
   zalo: sendToZalo,
   email: sendEmail,
+  hubspot: sendToHubSpot,
+  salesforce: sendToSalesforce,
 };
 
 export async function fireWebhooks(lead: LeadData): Promise<void> {
-  const targets: WebhookTarget[] = ["google_sheet", "zalo", "email"];
+  const targets: WebhookTarget[] = ["google_sheet", "zalo", "email", "hubspot", "salesforce"];
   for (const target of targets) {
     const log = await prisma.webhookLog.create({ data: { leadId: lead.id, target, status: "pending" } });
     try {
