@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -34,6 +34,10 @@ model Lead {
   aiEvaluation          String?  // Gemini AI personalized evaluation (nullable for fallback)
   consentAccepted       Boolean
   status                String   @default("new") // new / contacted / consulted / closed
+  assignedTo            String?  // Name of the assigned consultant
+  notes                 String?  // Internal consultation notes for sales reps
+  potentialScore        Int      @default(0)  // 0-100 potential score
+  potentialLevel        String   @default("cold") // hot / warm / cold
   sourcePage            String?
   utmSource             String?
   utmMedium             String?
@@ -41,9 +45,24 @@ model Lead {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
+  roadmapFeedbacks      RoadmapFeedback[]
+
   @@index([phone])
   @@index([profileGroup])
   @@index([status])
+  @@index([potentialLevel])
+}
+
+model RoadmapFeedback {
+  id          String   @id @default(cuid())
+  leadId      String
+  lead        Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  content     String   // AI-generated or manually written roadmap content
+  sentViaEmail Boolean @default(false)
+  createdBy   String   @default("admin") // Who created this roadmap
+  createdAt   DateTime @default(now())
+
+  @@index([leadId])
 }
 
 model WebhookLog {

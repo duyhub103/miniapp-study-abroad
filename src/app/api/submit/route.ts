@@ -8,6 +8,11 @@ import { prisma } from "@/lib/prisma";
 import { isRateLimited, recordSubmission } from "@/lib/rateLimit";
 import { fireWebhooks } from "@/lib/webhook";
 import { generateAIEvaluation } from "@/lib/gemini";
+import { generateRoadmap } from "@/lib/roadmap";
+import { sendResultEmail } from "@/lib/mailer";
+import { calculateScores } from "@/lib/scoring";
+import { getAssignedConsultant } from "@/lib/assignment";
+import { calculatePotentialScore } from "@/lib/potential";
 
 export async function POST(request: NextRequest) {
   try {
@@ -63,27 +68,74 @@ export async function POST(request: NextRequest) {
     const resultContent = RESULT_CONTENT[profileResult.profileGroup];
     const languageAssessment = LANGUAGE_ASSESSMENTS[langResult.languageGroup];
 
-    // ── Step 3: Gemini AI personalized evaluation ──
-    const aiEvaluation = await generateAIEvaluation({
-      fullName: data.fullName,
-      currentRole: data.currentRole,
-      currentEducationLevel: data.currentEducationLevel,
+    // ── Step 2.5: Radar chart scores ──
+    const radarScores = calculateScores({
       academicLevel: data.academicLevel,
-      currentMajor: data.currentMajor,
+      languageGroup: langResult.languageGroup,
+      budget: data.budget,
+      departureTime: data.departureTime,
       targetCountry: data.targetCountry,
       targetMajor: data.targetMajor,
-      studyType: data.studyType,
-      departureTime: data.departureTime,
-      budget: data.budget,
-      language: data.language,
       certificate: data.certificate,
-      certificateScore: data.certificateScore,
-      languageLevel: data.languageLevel,
-      weakSkill: data.weakSkill,
-      profileGroup: profileResult.profileGroup,
-      resultTitle: profileResult.resultTitle,
-      languageGroup: langResult.languageGroup,
+      currentEducationLevel: data.currentEducationLevel,
     });
+
+    // ── Step 2.6: Potential score for business classification ──
+    const potentialResult = calculatePotentialScore({
+      profileGroup: profileResult.profileGroup,
+      languageGroup: langResult.languageGroup,
+      academicLevel: data.academicLevel,
+      budget: data.budget,
+      departureTime: data.departureTime,
+      targetCountry: data.targetCountry,
+      targetMajor: data.targetMajor,
+      certificate: data.certificate,
+      email: data.email,
+    });
+
+    // ── Step 3: Gemini AI personalized evaluation & Roadmap ──
+    const [aiEvaluation, aiRoadmap] = await Promise.all([
+      generateAIEvaluation({
+        fullName: data.fullName,
+        currentRole: data.currentRole,
+        currentEducationLevel: data.currentEducationLevel,
+        academicLevel: data.academicLevel,
+        currentMajor: data.currentMajor,
+        targetCountry: data.targetCountry,
+        targetMajor: data.targetMajor,
+        studyType: data.studyType,
+        departureTime: data.departureTime,
+        budget: data.budget,
+        language: data.language,
+        certificate: data.certificate,
+        certificateScore: data.certificateScore,
+        languageLevel: data.languageLevel,
+        weakSkill: data.weakSkill,
+        profileGroup: profileResult.profileGroup,
+        resultTitle: profileResult.resultTitle,
+        languageGroup: langResult.languageGroup,
+      }),
+      generateRoadmap({
+        fullName: data.fullName,
+        currentRole: data.currentRole,
+        currentEducationLevel: data.currentEducationLevel,
+        academicLevel: data.academicLevel,
+        currentMajor: data.currentMajor,
+        targetCountry: data.targetCountry,
+        targetMajor: data.targetMajor,
+        studyType: data.studyType,
+        departureTime: data.departureTime,
+        budget: data.budget,
+        language: data.language,
+        certificate: data.certificate,
+        certificateScore: data.certificateScore,
+        languageLevel: data.languageLevel,
+        weakSkill: data.weakSkill,
+        profileGroup: profileResult.profileGroup,
+        languageGroup: langResult.languageGroup,
+        potentialLevel: potentialResult.potentialLevel,
+      })
+    ]);
 
     // Check for duplicate phone within 24h
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -121,6 +173,9 @@ export async function POST(request: NextRequest) {
       utmSource: data.utmSource || null,
       utmMedium: data.utmMedium || null,
       utmCampaign: data.utmCampaign || null,
+      assignedTo: getAssignedConsultant(data.targetCountry),
+      potentialScore: potentialResult.potentialScore,
+      potentialLevel: potentialResult.potentialLevel,
     };
 
     let lead;
@@ -130,21 +185,58 @@ export async function POST(request: NextRequest) {
       lead = await prisma.lead.create({ data: { ...leadData, status: "new" } });
     }
 
+    // Save roadmap in database if generated
+    if (aiRoadmap) {
+      await prisma.roadmapFeedback.create({
+        data: {
+          leadId: lead.id,
+          content: aiRoadmap,
+          sentViaEmail: !!data.email,
+          createdBy: "AI System",
+        },
+      });
+    }
+
     // Record rate limit
     await recordSubmission(ip);
 
     // Fire webhooks asynchronously (don't block response)
     fireWebhooks(lead).catch((err) => console.error("[Webhook] Background error:", err));
 
+    // Send result email to user (await to report status)
+    let emailStatus: "sent" | "failed" | "no_email" | "not_configured" = "no_email";
+    if (data.email) {
+      try {
+        const sent = await sendResultEmail({
+          fullName: data.fullName,
+          email: data.email,
+          profileGroup: profileResult.profileGroup,
+          resultTitle: profileResult.resultTitle,
+          overview: resultContent.overview,
+          suggestion: resultContent.suggestion,
+          languageAssessment,
+          aiEvaluation: aiEvaluation || null,
+          roadmapContent: aiRoadmap || null,
+        });
+        emailStatus = sent ? "sent" : "not_configured";
+      } catch (err) {
+        console.error("[Mailer] Error:", err);
+        emailStatus = "failed";
+      }
+    }
+
     return NextResponse.json({
       success: true,
+      emailStatus,
       result: {
         profileGroup: profileResult.profileGroup,
         resultTitle: profileResult.resultTitle,
         overview: resultContent.overview,
         suggestion: resultContent.suggestion,
         languageAssessment,
-        aiEvaluation: aiEvaluation || null, // Send to frontend
+        aiEvaluation: aiEvaluation || null,
+        aiRoadmap: aiRoadmap || null,
+        radarScores,
         ctaPrimary: resultContent.ctaPrimary,
         ctaSecondary: resultContent.ctaSecondary,
       },

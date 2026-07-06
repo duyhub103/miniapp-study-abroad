@@ -10,12 +10,14 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const profileGroup = searchParams.get("profileGroup");
   const status = searchParams.get("status");
+  const potentialLevel = searchParams.get("potentialLevel");
   const page = parseInt(searchParams.get("page") || "1");
   const limit = parseInt(searchParams.get("limit") || "20");
 
   const where: Record<string, string> = {};
   if (profileGroup) where.profileGroup = profileGroup;
   if (status) where.status = status;
+  if (potentialLevel) where.potentialLevel = potentialLevel;
 
   const [leads, total] = await Promise.all([
     prisma.lead.findMany({

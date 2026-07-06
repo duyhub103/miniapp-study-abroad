@@ -13,7 +13,13 @@ export async function GET(
   const { id } = await params;
   const lead = await prisma.lead.findUnique({ where: { id } });
   if (!lead) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json({ lead });
+  
+  const webhookLogs = await prisma.webhookLog.findMany({
+    where: { leadId: id },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return NextResponse.json({ lead, webhookLogs });
 }
 
 export async function PATCH(
@@ -24,12 +30,22 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
-  const { status } = await request.json();
+  const body = await request.json();
+  const { status, notes } = body;
 
-  if (!LEAD_STATUSES.includes(status)) {
-    return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  const updateData: Record<string, string> = {};
+
+  if (status) {
+    if (!LEAD_STATUSES.includes(status)) {
+      return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+    }
+    updateData.status = status;
   }
 
-  const lead = await prisma.lead.update({ where: { id }, data: { status } });
+  if (notes !== undefined) {
+    updateData.notes = notes;
+  }
+
+  const lead = await prisma.lead.update({ where: { id }, data: updateData });
   return NextResponse.json({ lead });
 }

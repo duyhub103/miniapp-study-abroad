@@ -1,7 +1,7 @@
 "use client";
 
 import { TextField, SelectField, ChipGroup } from "@/components/FormField";
-import { LANGUAGES, CERTIFICATES, LANGUAGE_LEVELS, WEAK_SKILLS } from "@/lib/enums";
+import { LANGUAGES, CERTIFICATES, LANGUAGE_LEVELS, WEAK_SKILLS, CERTIFICATE_SCORES } from "@/lib/enums";
 
 interface StepProps {
   data: Record<string, string>;
@@ -10,6 +10,9 @@ interface StepProps {
 }
 
 export default function Step4Language({ data, errors, onChange }: StepProps) {
+  const selectedCert = data.certificate || "";
+  const scoreOptions = CERTIFICATE_SCORES[selectedCert];
+
   return (
     <div className="space-y-1 animate-fadeIn">
       <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
@@ -32,20 +35,36 @@ export default function Step4Language({ data, errors, onChange }: StepProps) {
         label="Chứng chỉ ngoại ngữ"
         required
         value={data.certificate || ""}
-        onChange={(v) => onChange("certificate", v)}
+        onChange={(v) => {
+          onChange("certificate", v);
+          // Reset score when certificate type changes
+          onChange("certificateScore", "");
+        }}
         error={errors.certificate}
         options={CERTIFICATES}
       />
 
-      {data.certificate && data.certificate !== "Chưa có" && (
-        <TextField
-          id="certificateScore"
-          label="Điểm/Cấp độ chứng chỉ"
-          value={data.certificateScore || ""}
-          onChange={(v) => onChange("certificateScore", v)}
-          error={errors.certificateScore}
-          placeholder="VD: 6.5, N2, Level 4..."
-        />
+      {selectedCert && selectedCert !== "Chưa có" && (
+        scoreOptions ? (
+          <SelectField
+            id="certificateScore"
+            label="Điểm/Cấp độ chứng chỉ"
+            value={data.certificateScore || ""}
+            onChange={(v) => onChange("certificateScore", v)}
+            error={errors.certificateScore}
+            options={scoreOptions}
+            placeholder="-- Chọn điểm/cấp độ --"
+          />
+        ) : (
+          <TextField
+            id="certificateScore"
+            label="Điểm/Cấp độ chứng chỉ"
+            value={data.certificateScore || ""}
+            onChange={(v) => onChange("certificateScore", v)}
+            error={errors.certificateScore}
+            placeholder="VD: 6.5, N2, Level 4..."
+          />
+        )
       )}
 
       <ChipGroup
