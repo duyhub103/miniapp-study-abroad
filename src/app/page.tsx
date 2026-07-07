@@ -37,7 +37,7 @@ export default function HomePage() {
         <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-to-tr from-cyan-500/10 to-teal-500/10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3 pointer-events-none" />
 
         {/* Header */}
-        <header className="w-full py-5 px-6 md:px-12 flex justify-between items-center bg-white/70 backdrop-blur-md border-b border-slate-200/50 sticky top-0 z-50">
+        <header className="w-full py-5 px-6 md:px-12 flex justify-center items-center bg-white/70 backdrop-blur-md border-b border-slate-200/50 sticky top-0 z-50">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-xl text-white shadow-md shadow-teal-500/20 select-none">
               🎓
@@ -45,10 +45,6 @@ export default function HomePage() {
             <span className="text-lg font-bold text-slate-800 tracking-wide">
               Du Học Bình Dương
             </span>
-          </div>
-          <div className="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-            <span>☎ Hotline:</span>
-            <a href="tel:0969542010" className="hover:text-teal-600 transition-colors font-bold text-slate-700">0969 54 2010</a>
           </div>
         </header>
 
